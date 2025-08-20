@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: maja-pod-copy-model-billy 
+spec:
+  containers:
+  - name: mypod
+    image: gitlab-registry.nrp-nautilus.io/jmduarte/hhh:latest 
+    command: ["sh", "-c", "echo 'Im a new pod' && sleep infinity"]
+    resources:
+      limits:
+        cpu: "4"
+        memory: 32Gi
+        nvidia.com/gpu: 1
+      requests:
+        memory: 32Gi
+        cpu: "4"
+        nvidia.com/gpu: 1
+    volumeMounts:
+    - mountPath: /maad-vol
+      name: maad-vol
+    - mountPath: /hhh-vol
+      name: hhh-vol
+  restartPolicy: Never
+  volumes:
+    - name: maad-vol
+      persistentVolumeClaim:
+        claimName: maad-vol
+    - name: hhh-vol
+      persistentVolumeClaim:
+        claimName: hhh-vol
