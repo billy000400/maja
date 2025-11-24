@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: event-pod-2gpu
+  labels:
+    app: eventssl
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nvidia.com/gpu.product
+            operator: In
+            values:
+            - NVIDIA-GeForce-RTX-3090
+  containers:
+  - name: container
+    image: gitlab-registry.nrp-nautilus.io/jmduarte/hhh:latest
+    command: ["/bin/bash", "-c", "sleep infinity"]
+    resources:
+      limits:
+        memory: 32Gi
+        cpu: "4"
+        nvidia.com/gpu: 2
+      requests:
+        memory: 30Gi
+        cpu: "4"
+        nvidia.com/gpu: 2
+    volumeMounts:
+    - mountPath: /eventssl-vol
+      name: eventssl-vol
+  volumes:
+    - name: eventssl-vol
+      persistentVolumeClaim:
+        claimName: eventssl-vol 
