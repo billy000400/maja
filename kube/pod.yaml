@@ -19,11 +19,18 @@ spec:
     volumeMounts:
     - mountPath: /maad-vol
       name: maad-vol
+    - mountPath: /root/.ssh
+      name: git-ssh
+      readOnly: true
   restartPolicy: Never
   volumes:
     - name: maad-vol
       persistentVolumeClaim:
         claimName: maad-vol
+    - name: git-ssh
+      secret:
+        secretName: git-ssh
+        defaultMode: 0400
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -40,3 +47,4 @@ spec:
               - node-1-3.sdsc.optiputer.net
               - k8s-a100-01.suncorridor.org
               - k8s-haosu-23.sdsc.optiputer.net
+              - k8s-gpu-01.calit2.optiputer.net
