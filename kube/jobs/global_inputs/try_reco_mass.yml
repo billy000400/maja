@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    jobgroup: hhh-job-train
+  name: hhh-job-reco-mass-input-additional
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    spec:
+      initContainers:
+      - name: init-clone-repo
+        image: alpine/git
+        command:
+        - "/bin/sh"
+        - "-c"
+        - >
+          git clone --single-branch --branch master --recurse-submodules https://github.com/Alexanders101/SPANet /opt/repo/hhh &&
+          chown -R 1000:1000 /opt/repo/hhh
+        volumeMounts:
+        - name: git-repo
+          mountPath: /opt/repo
+        resources:
+          limits:
+            cpu: '1'
+            memory: 1Gi
+          requests:
+            cpu: '1'
+            memory: 1Gi
+      containers:
+      - name: training
+        image: gitlab-registry.nrp-nautilus.io/jmduarte/hhh:latest 
+        command:
+        - "/bin/bash"
+        - "-c"
+        - >
+          cd /opt/repo/hhh &&
+          pip install -e . &&
+          OPTION_FILE=/maad-vol/option_files/global_input/reco_mass.json &&
+          LOG_DIR=/maad-vol/logs &&
+          TRAINING_NAME=global_input &&
+          EPOCHS=500 &&
+          BATCH_SIZE=4096 &&
+          python -m spanet.train -of $OPTION_FILE -l $LOG_DIR -n $TRAINING_NAME  --epochs $EPOCHS --gpus 1 --batch_size $BATCH_SIZE
+        resources:
+          limits:
+            memory: 32Gi
+            cpu: "4"
+            nvidia.com/gpu: "1"
+          requests:
+            memory: 32Gi
+            cpu: "4"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
+        - mountPath: /maad-vol
+          name: maad-vol
+        - name: git-repo
+          mountPath: /opt/repo
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 8Gi
+      - name: maad-vol
+        persistentVolumeClaim:
+          claimName: maad-vol
+      - name: git-repo
+        emptyDir: {}
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                  - gpn-fiona-mizzou-2.rnet.missouri.edu
+                  - gpengine-uams.areon.net
+                  - rci-nrp-gpu-05.sdsu.edu
+                  - node-2-2.sdsc.optiputer.net
+                  - hcc-gpengine-shor-c5303.unl.edu
+                  - node-1-3.sdsc.optiputer.net
+                  - k8s-a100-01.suncorridor.org
+                  - k8s-haosu-23.sdsc.optiputer.net
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                # - NVIDIA-GeForce-GTX-1080
+                # - NVIDIA-GeForce-GTX-1080-Ti
+                # - NVIDIA-GeForce-GTX-2080-Ti
+                - NVIDIA-GeForce-RTX-3090
+                - NVIDIA-GeForce-RTX-4090
