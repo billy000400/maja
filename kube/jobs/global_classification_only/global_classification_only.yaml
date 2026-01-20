@@ -6,7 +6,7 @@ metadata:
   name: hhh-job-resonance-mass-classification
 spec:
   backoffLimit: 0
-  parallelism: 1
+  parallelism: 5
   template:
     spec:
       initContainers:
