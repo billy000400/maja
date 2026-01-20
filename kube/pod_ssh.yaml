@@ -49,3 +49,4 @@ spec:
               - k8s-a100-01.suncorridor.org
               - k8s-haosu-23.sdsc.optiputer.net
               - k8s-gpu-01.calit2.optiputer.net
+              - hcc-chase-shor-c4705.unl.edu
