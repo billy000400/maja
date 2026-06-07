@@ -3,7 +3,7 @@ kind: Job
 metadata:
   labels:
     jobgroup: octet-job-train
-  name: octet-job-train-500-1500-pairwise-billy
+  name: octet-job-train-500-1500-billy
 spec:
   backoffLimit: 0
   parallelism: 1
@@ -37,7 +37,7 @@ spec:
         - >
           cd /maad-vol/SPANet &&
           pip install -e . &&
-          python -m spanet.train -of /maad-vol/option_files/octet/500_1500_pairwise.json -l /maad-vol/logs -n octet_500_1500_pairwise --epochs 500 --gpus 4 --batch_size 4096
+          python -m spanet.train -of /maad-vol/option_files/octet/500_1500.json -l /maad-vol/logs -n octet_500_1500 --epochs 500 --gpus 4 --batch_size 2048
         resources:
           limits:
             memory: 32Gi
@@ -79,6 +79,7 @@ spec:
                 values:
                 - NVIDIA-GeForce-RTX-4090
                 - NVIDIA-GeForce-RTX-3090
+                - NVIDIA-A10
                 - NVIDIA-TITAN-RTX
                 - NVIDIA-RTX-A5000
                 - Quadro-RTX-6000

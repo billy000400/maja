@@ -1,0 +1,38 @@
+# Commands to copy script and process h5 files
+# Run these commands in your terminal (after kubectl authentication is set up)
+
+# 1. Copy the script to the pod
+kubectl cp add_gen_mass_logits.py maja-pod-billy:/maad-vol/SPANet/add_gen_mass_logits.py
+
+# 2. Make it executable
+kubectl exec maja-pod-billy -- chmod +x /maad-vol/SPANet/add_gen_mass_logits.py
+
+# 3. List h5 files in training_sets directory
+kubectl exec maja-pod-billy -- find /maad-vol/data/training_sets -name "*.h5" -type f
+
+# 4. Process each h5 file (run this for each file found in step 3)
+# Replace <h5_file_path> with the actual path from step 3
+kubectl exec maja-pod-billy -- python3 /maad-vol/SPANet/add_gen_mass_logits.py \
+    /maad-vol/data/training_sets/<h5_file_path> \
+    --mass-classes "200,300,400,500,600,700,800,900,1000"
+
+# OR use this to process all h5 files at once:
+kubectl exec maja-pod-billy -- bash -c "
+    cd /maad-vol/data/training_sets && 
+    for file in *.h5; do
+        echo \"Processing \$file...\"
+        python3 /maad-vol/SPANet/add_gen_mass_logits.py \"\$file\" --mass-classes \"200,300,400,500,600,700,800,900,1000\"
+    done
+"
+
+# 5. Verify the gen_mass_logits were added (check one file)
+kubectl exec maja-pod-billy -- python3 -c "
+import h5py
+f = h5py.File('/maad-vol/data/training_sets/<h5_file_path>', 'r')
+print('Keys in EVENT group:', list(f['EVENT'].keys()))
+if 'gen_mass_logits' in f['EVENT']:
+    print('gen_mass_logits shape:', f['EVENT/gen_mass_logits'].shape)
+    print('gen_mass_logits dtype:', f['EVENT/gen_mass_logits'].dtype)
+else:
+    print('ERROR: gen_mass_logits not found!')
+"

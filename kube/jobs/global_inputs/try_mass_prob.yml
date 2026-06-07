@@ -2,8 +2,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    jobgroup: octet-job-train
-  name: octet-job-train-500-1500-pairwise-billy
+    jobgroup: hhh-job-train
+  name: hhh-job-mass-prob-input
 spec:
   backoffLimit: 0
   parallelism: 1
@@ -16,8 +16,8 @@ spec:
         - "/bin/sh"
         - "-c"
         - >
-          git clone --single-branch --branch master --recurse-submodules https://github.com/Alexanders101/SPANet /opt/repo/octet &&
-          chown -R 1000:1000 /opt/repo/octet
+          git clone --single-branch --branch master --recurse-submodules https://github.com/Alexanders101/SPANet /opt/repo/hhh &&
+          chown -R 1000:1000 /opt/repo/hhh
         volumeMounts:
         - name: git-repo
           mountPath: /opt/repo
@@ -34,10 +34,28 @@ spec:
         command:
         - "/bin/bash"
         - "-c"
-        - >
+        - |
+          set -e -o pipefail
           cd /maad-vol/SPANet &&
           pip install -e . &&
-          python -m spanet.train -of /maad-vol/option_files/octet/500_1500_pairwise.json -l /maad-vol/logs -n octet_500_1500_pairwise --epochs 500 --gpus 4 --batch_size 4096
+          OPTION_FILE=/maad-vol/option_files/global_input/mass_prob_4gpu.json &&
+          LOG_DIR=/maad-vol/logs &&
+          TRAINING_NAME=global_mass_prob_input &&
+          EPOCHS=500 &&
+          BATCH_SIZE=4096 &&
+          RUN_LOG="$LOG_DIR/${TRAINING_NAME}_run.log" &&
+          ERROR_LOG="$LOG_DIR/${TRAINING_NAME}_error.log" &&
+          python -m spanet.train -of $OPTION_FILE -l $LOG_DIR -n $TRAINING_NAME --epochs $EPOCHS --gpus 4 --batch_size $BATCH_SIZE 2>&1 | tee "$RUN_LOG" || {
+            EXIT=$?
+            {
+              echo "=== spanet.train FAILED at $(date) ==="
+              echo "Exit code: $EXIT"
+              echo "=== Last 500 lines of output ==="
+              tail -500 "$RUN_LOG"
+            } > "$ERROR_LOG"
+            echo "Error saved to $ERROR_LOG"
+            exit $EXIT
+          }
         resources:
           limits:
             memory: 32Gi
@@ -74,12 +92,15 @@ spec:
                 operator: NotIn
                 values:
                   - none
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: nvidia.com/gpu.product
                 operator: In
                 values:
-                - NVIDIA-GeForce-RTX-4090
+                # - NVIDIA-GeForce-GTX-1080
+                # - NVIDIA-GeForce-GTX-1080-Ti
+                # - NVIDIA-GeForce-GTX-2080-Ti
                 - NVIDIA-GeForce-RTX-3090
-                - NVIDIA-TITAN-RTX
-                - NVIDIA-RTX-A5000
-                - Quadro-RTX-6000
-                - Tesla-V100-SXM2-32GB
+                - NVIDIA-GeForce-RTX-4090

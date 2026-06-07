@@ -2,8 +2,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    jobgroup: octet-job-train
-  name: octet-job-train-500-1500-pairwise-billy
+    jobgroup: hhh-job-train
+  name: hhh-pairwise-predict-global-mass
 spec:
   backoffLimit: 0
   parallelism: 1
@@ -16,8 +16,8 @@ spec:
         - "/bin/sh"
         - "-c"
         - >
-          git clone --single-branch --branch master --recurse-submodules https://github.com/Alexanders101/SPANet /opt/repo/octet &&
-          chown -R 1000:1000 /opt/repo/octet
+          git clone --single-branch --branch master --recurse-submodules https://github.com/Alexanders101/SPANet /opt/repo/hhh &&
+          chown -R 1000:1000 /opt/repo/hhh
         volumeMounts:
         - name: git-repo
           mountPath: /opt/repo
@@ -37,7 +37,13 @@ spec:
         - >
           cd /maad-vol/SPANet &&
           pip install -e . &&
-          python -m spanet.train -of /maad-vol/option_files/octet/500_1500_pairwise.json -l /maad-vol/logs -n octet_500_1500_pairwise --epochs 500 --gpus 4 --batch_size 4096
+          python -m spanet.train \
+              -of /maad-vol/option_files/pairwise_feature/assign_resolved_hhh_predict_global_mass_w_pairwise_features_4gpu.json \
+              -l /maad-vol/logs \
+              -n pairwise_AND_predict_global_mass \
+              --gpus 4 \
+              --epochs 500 \
+              --batch_size 4096
         resources:
           limits:
             memory: 32Gi
@@ -73,13 +79,14 @@ spec:
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
-                  - none
+                - ry-gpu-10.sdsc.optiputer.net
+
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: nvidia.com/gpu.product
                 operator: In
                 values:
-                - NVIDIA-GeForce-RTX-4090
                 - NVIDIA-GeForce-RTX-3090
-                - NVIDIA-TITAN-RTX
-                - NVIDIA-RTX-A5000
-                - Quadro-RTX-6000
-                - Tesla-V100-SXM2-32GB
+                - NVIDIA-GeForce-RTX-4090

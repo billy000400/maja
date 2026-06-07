@@ -45,7 +45,6 @@ spec:
               --gpus 1 \
               --batch_size 4096 \
               --classify \
-              --mass_classes "200,300,400,500,600,700,800,900,1000"
         resources:
           limits:
             memory: 32Gi

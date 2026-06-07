@@ -6,7 +6,7 @@ metadata:
   name: hhh-job-train-mass-200
 spec:
   backoffLimit: 0
-  parallelism: 2
+  parallelism: 5
   template:
     spec:
       initContainers:
@@ -40,11 +40,11 @@ spec:
           python -m spanet.train -of /maad-vol/option_files/assign_resolved_mass_200_hhh.json -l /maad-vol/logs -n assign_resolved_mass_200_hhh --epochs 500 --gpus 1 --batch_size 4096
         resources:
           limits:
-            memory: 32Gi
+            memory: 8Gi
             cpu: "4"
             nvidia.com/gpu: "1"
           requests:
-            memory: 32Gi
+            memory: 8Gi
             cpu: "4"
             nvidia.com/gpu: "1"
         volumeMounts:
