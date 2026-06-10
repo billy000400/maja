@@ -3,7 +3,7 @@ kind: Job
 metadata:
   labels:
     jobgroup: octet-job-train
-  name: octet-job-train-uaf-500-1500-billy
+  name: octet-job-train-uaf-500-1500-pairwise-billy
 spec:
   backoffLimit: 0
   parallelism: 1
@@ -37,7 +37,7 @@ spec:
         - >
           cd /maad-vol/SPANet &&
           pip install -e . &&
-          python -m spanet.train -of /maad-vol/option_files/octet_uaf/500_1500.json -l /maad-vol/logs -n octet_500_1500 --epochs 500 --gpus 4 --batch_size 2048
+          python -m spanet.train -of /maad-vol/option_files/octet_uaf/500_1500_pairwise.json -l /maad-vol/logs -n octet_500_1500_pairwise --epochs 500 --gpus 4 --batch_size 2048
         resources:
           limits:
             memory: 32Gi
